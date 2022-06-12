@@ -1,25 +1,41 @@
-import logo from './logo.svg';
-import './App.css';
+import Grid from "./grid"
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+const NUM_ROWS = 16
+const NUM_COLS = 16
+
+function toKey(arr) {
+  return arr[0] + "-" + arr[1]
 }
 
-export default App;
+let colorMap = {
+  1: "blue",
+  2: "green",
+  3: "red",
+}
+
+function App() {
+  let revealed = new Set()
+  let map = new Map([
+    ["1-1", 1],
+    ["1-2", 1],
+    ["1-3", null],
+  ])
+
+  function renderCell({ rowI, colI }) {
+    let val = map.get(toKey([rowI, colI]))
+    return (
+      <div className="font-bold text-2xl" style={{ color: colorMap[val] }}>
+        {val}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center flex-col p-4">
+      <h1 className="text-2xl font-bold mb-10">Minesweeper</h1>
+      <Grid numCols={NUM_COLS} numRows={NUM_ROWS} renderCell={renderCell} />
+    </div>
+  )
+}
+
+export default App
