@@ -62,12 +62,7 @@ export default function App() {
     <div className="flex items-center flex-col p-4">
       <h1 className="text-2xl font-bold mb-10">Minesweeper</h1>
       <Grid
-        onCellClick={key => {
-          if (revealed.has(key)) {
-            return
-          }
-          setRevealed(p => new Set([...p, key]))
-        }}
+        onCellClick={key => setRevealed(p => new Set([...p, key]))}
         numCols={NUM_COLS}
         numRows={NUM_ROWS}
         renderCell={renderCell}
