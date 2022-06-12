@@ -1,4 +1,5 @@
 import Grid from "./grid"
+import { useState } from "react"
 
 const NUM_ROWS = 16
 const NUM_COLS = 16
@@ -13,13 +14,15 @@ let colorMap = {
   3: "red",
 }
 
-function App() {
-  let revealed = new Set()
-  let map = new Map([
-    ["1-1", 1],
-    ["1-2", 1],
-    ["1-3", null],
-  ])
+export default function App() {
+  let [revealed, setRevealed] = useState(new Set())
+  let [map, setMap] = useState(
+    new Map([
+      ["1-1", 1],
+      ["1-2", 1],
+      ["1-3", null],
+    ])
+  )
 
   function renderCell({ rowI, colI }) {
     let val = map.get(toKey([rowI, colI]))
@@ -37,5 +40,3 @@ function App() {
     </div>
   )
 }
-
-export default App
