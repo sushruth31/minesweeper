@@ -96,7 +96,6 @@ export default function App() {
   let [revealed, setRevealed] = useState(new Set())
   let map = useMemo(createMap, [])
   let [gameOver, setGameOver] = useState(null)
-  let lastClickedKey = useRef(null)
 
   function renderCell({ cellKey }) {
     let val = map.get(cellKey)
@@ -114,24 +113,16 @@ export default function App() {
     )
   }
 
-  useEffect(() => {
-    console.log(lastClickedKey.current)
-  }, [revealed])
-
-  function handleClick(key) {
-    if (map.get(key) === "bomb") {
-      //game over
-      setGameOver({ outcome: Outcomes.LOSE })
-      alert("Game over. You suck!")
-    }
-  }
-
   return (
     <div className="flex items-center flex-col p-4">
       <h1 className="text-2xl font-bold mb-10">Minesweeper</h1>
       <Grid
         onCellClick={key => {
-          lastClickedKey.current = key
+          if (map.get(key) === "bomb") {
+            //game over
+            setGameOver({ outcome: Outcomes.LOSE })
+            alert("You suck")
+          }
           setRevealed(p => new Set([...p, key]))
         }}
         numCols={NUM_COLS}
