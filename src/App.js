@@ -1,9 +1,14 @@
 import Grid from "./grid"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import bombImgSrc from "./bomb.png"
 
 const NUM_ROWS = 16
 const NUM_COLS = 16
+
+const Outcomes = {
+  WIN: "win",
+  LOSE: "lose",
+}
 
 export function toKey(arr) {
   return arr[0] + "-" + arr[1]
@@ -75,13 +80,12 @@ function createMap() {
         continue
       }
       let neighbors = getNeighbors(key)
-      let count = neighbors.reduce((acc, cur) => {
-        if (bombMap.get(cur) === "bomb") {
-          return acc + 1
-        }
-        return acc
-      }, 0)
-      bombMap.set(key, count <= 3 ? count : null)
+      let count =
+        neighbors.reduce(
+          (acc, cur) => (bombMap.get(cur) === "bomb" ? acc + 1 : acc),
+          0
+        ) || null
+      bombMap.set(key, count <= 3 && count)
     }
   }
 
@@ -91,22 +95,45 @@ function createMap() {
 export default function App() {
   let [revealed, setRevealed] = useState(new Set())
   let map = useMemo(createMap, [])
-  window.bombMap = map
+  let [gameOver, setGameOver] = useState(null)
+  let lastClickedKey = useRef(null)
 
   function renderCell({ cellKey }) {
     let val = map.get(cellKey)
     return (
-      <div className="font-bold text-2xl" style={{ color: colorMap[val] }}>
-        {val === "bomb" ? <img className="p-1" src={bombImgSrc} /> : val}
-      </div>
+      <>
+        {revealed.has(cellKey) && (
+          <div
+            className="font-bold text-2xl bg-gray-100 w-full h-full flex items-center justify-center "
+            style={{ color: colorMap[val] }}
+          >
+            {val === "bomb" ? <img className="p-1" src={bombImgSrc} /> : val}
+          </div>
+        )}
+      </>
     )
+  }
+
+  useEffect(() => {
+    console.log(lastClickedKey.current)
+  }, [revealed])
+
+  function handleClick(key) {
+    if (map.get(key) === "bomb") {
+      //game over
+      setGameOver({ outcome: Outcomes.LOSE })
+      alert("Game over. You suck!")
+    }
   }
 
   return (
     <div className="flex items-center flex-col p-4">
       <h1 className="text-2xl font-bold mb-10">Minesweeper</h1>
       <Grid
-        onCellClick={key => setRevealed(p => new Set([...p, key]))}
+        onCellClick={key => {
+          lastClickedKey.current = key
+          setRevealed(p => new Set([...p, key]))
+        }}
         numCols={NUM_COLS}
         numRows={NUM_ROWS}
         renderCell={renderCell}
