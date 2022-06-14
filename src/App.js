@@ -24,15 +24,19 @@ let colorMap = {
   3: "red",
 }
 
+function randomKey() {
+  let randRow = Math.floor(Math.random() * NUM_ROWS)
+  let randCol = Math.floor(Math.random() * NUM_COLS)
+  return toKey([randRow, randCol])
+}
+
 function plantBombs() {
   let numBombs = Math.floor(Math.sqrt(NUM_ROWS * NUM_COLS))
   let bombs = new Set()
   let map = new Map()
 
   function createBombKey() {
-    let randRow = Math.floor(Math.random() * NUM_ROWS)
-    let randCol = Math.floor(Math.random() * NUM_COLS)
-    let bombAttempt = toKey([randRow, randCol])
+    let bombAttempt = randomKey()
     if (bombs.has(bombAttempt)) {
       return createBombKey()
     }
@@ -49,7 +53,6 @@ function plantBombs() {
 function filterInvalid([r, c]) {
   return r >= 0 && r <= NUM_ROWS && c >= 0 && c <= NUM_COLS
 }
-window.getNeighbors = getNeighbors
 
 //['1-1', '2-2']
 function getNeighbors(key) {
@@ -97,6 +100,14 @@ export default function App() {
   let map = useMemo(createMap, [])
   let [gameOver, setGameOver] = useState(null)
 
+  function addToRevealed(key) {
+    setRevealed(p => new Set([...p, key]))
+  }
+
+  useEffect(() => {
+    revealEmptyCells(randomKey())
+  }, [])
+
   function renderCell({ cellKey }) {
     let val = map.get(cellKey)
     return (
@@ -113,17 +124,40 @@ export default function App() {
     )
   }
 
+  function revealEmptyCells(key, visited = new Set()) {
+    //check key if bomb and not in visited. uncover . get neighbors and repeat
+    let val = map.get(key)
+    if (visited.has(key) || val === "bomb") {
+      return
+    }
+    if (typeof val === "number") {
+      return addToRevealed(key)
+    }
+    visited.add(key)
+    addToRevealed(key)
+    let neighbors = getNeighbors(key)
+    for (let key of neighbors) {
+      revealEmptyCells(key, visited)
+    }
+  }
+
   return (
     <div className="flex items-center flex-col p-4">
       <h1 className="text-2xl font-bold mb-10">Minesweeper</h1>
       <Grid
         onCellClick={key => {
-          if (map.get(key) === "bomb") {
-            //game over
-            setGameOver({ outcome: Outcomes.LOSE })
-            alert("You suck")
+          addToRevealed(key)
+          let val = map.get(key)
+
+          switch (val) {
+            case "bomb":
+              setGameOver({ outcome: Outcomes.LOSE })
+              alert("You suck")
+              return
+
+            case null:
+              return revealEmptyCells(key)
           }
-          setRevealed(p => new Set([...p, key]))
         }}
         numCols={NUM_COLS}
         numRows={NUM_ROWS}
