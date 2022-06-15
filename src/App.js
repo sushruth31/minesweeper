@@ -31,7 +31,7 @@ function randomKey() {
 }
 
 function plantBombs() {
-  let numBombs = Math.floor(Math.sqrt(NUM_ROWS * NUM_COLS))
+  let numBombs = (NUM_COLS * NUM_ROWS) / 5
   let bombs = new Set()
   let map = new Map()
 
@@ -88,7 +88,7 @@ function createMap() {
           (acc, cur) => (bombMap.get(cur) === "bomb" ? acc + 1 : acc),
           0
         ) || null
-      bombMap.set(key, count <= 3 && count)
+      bombMap.set(key, count <= 4 ? count : null)
     }
   }
 
@@ -99,14 +99,24 @@ export default function App() {
   let [revealed, setRevealed] = useState(new Set())
   let map = useMemo(createMap, [])
   let [gameOver, setGameOver] = useState(null)
-
+  let mountedRef = useRef(null)
+  window.map = map
   function addToRevealed(key) {
     setRevealed(p => new Set([...p, key]))
   }
 
   useEffect(() => {
-    revealEmptyCells(randomKey())
-  }, [])
+    function getRandomEmptyKey() {
+      let attempt = randomKey()
+      return map.get(attempt) == null ? attempt : getRandomEmptyKey()
+    }
+    if (!mountedRef.current) {
+      let key = getRandomEmptyKey()
+
+      revealEmptyCells(key)
+      mountedRef.current = true
+    }
+  })
 
   function renderCell({ cellKey }) {
     let val = map.get(cellKey)
@@ -126,39 +136,43 @@ export default function App() {
 
   function revealEmptyCells(key, visited = new Set()) {
     //check key if bomb and not in visited. uncover . get neighbors and repeat
-    let val = map.get(key)
-    if (visited.has(key) || val === "bomb") {
-      return
-    }
-    if (typeof val === "number") {
-      return addToRevealed(key)
-    }
     visited.add(key)
     addToRevealed(key)
-    let neighbors = getNeighbors(key)
-    for (let key of neighbors) {
-      revealEmptyCells(key, visited)
+    if (map.get(key) == null) {
+      let neighbors = getNeighbors(key)
+      for (let key of neighbors) {
+        if (!visited.has(key)) {
+          revealEmptyCells(key, visited)
+        }
+      }
     }
   }
 
   return (
     <div className="flex items-center flex-col p-4">
-      <h1 className="text-2xl font-bold mb-10">Minesweeper</h1>
+      <div className="text-2xl font-bold flex mb-10 items-center flex-col ">
+        <h1>Minesweeper</h1>
+        {gameOver && <h1>You Lose</h1>}
+      </div>
       <Grid
-        onCellClick={key => {
-          addToRevealed(key)
-          let val = map.get(key)
+        onCellClick={
+          gameOver
+            ? () => {}
+            : key => {
+                addToRevealed(key)
+                let val = map.get(key)
 
-          switch (val) {
-            case "bomb":
-              setGameOver({ outcome: Outcomes.LOSE })
-              alert("You suck")
-              return
+                switch (val) {
+                  case "bomb":
+                    setGameOver({ outcome: Outcomes.LOSE })
 
-            case null:
-              return revealEmptyCells(key)
-          }
-        }}
+                    return
+
+                  case null:
+                    return revealEmptyCells(key)
+                }
+              }
+        }
         numCols={NUM_COLS}
         numRows={NUM_ROWS}
         renderCell={renderCell}
