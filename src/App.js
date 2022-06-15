@@ -88,19 +88,23 @@ function createMap() {
           (acc, cur) => (bombMap.get(cur) === "bomb" ? acc + 1 : acc),
           0
         ) || null
-      bombMap.set(key, count <= 4 ? count : null)
+      bombMap.set(key, count)
     }
   }
-
+  for (let [_, v] of bombMap.entries()) {
+    if (v >= 5) {
+      return createMap()
+    }
+  }
   return bombMap
 }
 
 export default function App() {
   let [revealed, setRevealed] = useState(new Set())
   let map = useMemo(createMap, [])
+  window.map = map
   let [gameOver, setGameOver] = useState(null)
   let mountedRef = useRef(null)
-  window.map = map
   function addToRevealed(key) {
     setRevealed(p => new Set([...p, key]))
   }
@@ -138,7 +142,8 @@ export default function App() {
     //check key if bomb and not in visited. uncover . get neighbors and repeat
     visited.add(key)
     addToRevealed(key)
-    if (map.get(key) == null) {
+    let val = map.get(key)
+    if (val === null) {
       let neighbors = getNeighbors(key)
       for (let key of neighbors) {
         if (!visited.has(key)) {
