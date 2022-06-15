@@ -5,6 +5,8 @@ import bombImgSrc from "./bomb.png"
 const NUM_ROWS = 16
 const NUM_COLS = 16
 
+const delay = time => new Promise(resolve => setTimeout(resolve, time))
+
 const Outcomes = {
   WIN: "win",
   LOSE: "lose",
@@ -92,6 +94,7 @@ function createMap() {
     }
   }
   for (let [_, v] of bombMap.entries()) {
+    //invalid map try again
     if (v >= 5) {
       return createMap()
     }
@@ -153,11 +156,20 @@ export default function App() {
     }
   }
 
+  async function showAllBombs() {
+    for (let [k, v] of map.entries()) {
+      if (v === "bomb" && !revealed.has(k)) {
+        await delay(200)
+        addToRevealed(k)
+      }
+    }
+  }
+
   return (
     <div className="flex items-center flex-col p-4">
       <div className="text-2xl font-bold flex mb-10 items-center flex-col ">
         <h1>Minesweeper</h1>
-        {gameOver && <h1>You Lose</h1>}
+        {gameOver && <h1>You Lose!!</h1>}
       </div>
       <Grid
         onCellClick={
@@ -170,8 +182,7 @@ export default function App() {
                 switch (val) {
                   case "bomb":
                     setGameOver({ outcome: Outcomes.LOSE })
-
-                    return
+                    return showAllBombs()
 
                   case null:
                     return revealEmptyCells(key)
