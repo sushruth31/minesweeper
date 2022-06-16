@@ -191,7 +191,16 @@ export default function App() {
           {gameOver && <h1>You Lose!!</h1>}
         </div>
         <Grid
-          onCellClick={() => modal.handleModal(<div>Hello</div>)}
+          onCellClick={(key, { target: { offsetLeft, offsetTop } }) => {
+            modal.handleModal(
+              <div
+                style={{ left: offsetLeft, top: offsetTop }}
+                className="absolute bg-white"
+              >
+                Hello
+              </div>
+            )
+          }}
           numCols={NUM_COLS}
           numRows={NUM_ROWS}
           renderCell={renderCell}

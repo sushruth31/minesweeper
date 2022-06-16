@@ -15,7 +15,7 @@ export default function Grid({
               let cellKey = toKey([rowI, colI])
               return (
                 <div
-                  onClick={() => onCellClick(cellKey)}
+                  onClick={e => onCellClick(cellKey, e)}
                   className="w-[40px] bg-zinc-500 cursor-pointer flex items-center justify-center h-[40px] border border-zinc-800"
                   key={colI}
                 >
