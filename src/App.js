@@ -2,6 +2,8 @@ import Grid from "./grid"
 import { useEffect, useMemo, useState, useRef } from "react"
 import bombImgSrc from "./bomb.png"
 import { useModal } from "./modalcontext"
+import FlagIcon from "@mui/icons-material/Flag"
+import HardwareIcon from "@mui/icons-material/Hardware"
 
 const NUM_ROWS = 16
 const NUM_COLS = 16
@@ -167,21 +169,21 @@ export default function App() {
     }
   }
 
-  let handleClick = gameOver
-    ? () => {}
-    : key => {
-        addToRevealed(key)
-        let val = map.get(key)
+  let handleClick = key =>
+    gameOver
+      ? () => {}
+      : () => {
+          modal.hide()
+          addToRevealed(key)
+          switch (map.get(key)) {
+            case "bomb":
+              setGameOver({ outcome: Outcomes.LOSE })
+              return showAllBombs()
 
-        switch (val) {
-          case "bomb":
-            setGameOver({ outcome: Outcomes.LOSE })
-            return showAllBombs()
-
-          case null:
-            return revealEmptyCells(key)
+            case null:
+              return revealEmptyCells(key)
+          }
         }
-      }
 
   return (
     <>
@@ -195,9 +197,20 @@ export default function App() {
             modal.handleModal(
               <div
                 style={{ left: offsetLeft, top: offsetTop }}
-                className="absolute bg-white"
+                className="absolute bg-white rounded p-2"
               >
-                Hello
+                <div className="flex items-center justify-center">
+                  <FlagIcon
+                    style={{ width: 40, height: 40 }}
+                    className="cursor-pointer mr-4"
+                  />
+                  <HardwareIcon
+                    onClick={handleClick(key)}
+                    className="cursor-pointer"
+                    height={40}
+                    width={40}
+                  />
+                </div>
               </div>
             )
           }}

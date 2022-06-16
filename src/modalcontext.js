@@ -35,7 +35,7 @@ export function Modal() {
       <div
         onClick={values.hide}
         className="fixed top-0 left-0 h-screen w-full"
-        style={{ background: "rgba(0,0,0,0.8)" }}
+        style={{ background: "rgba(0,0,0,0.4)" }}
       >
         {values.content}
       </div>,
