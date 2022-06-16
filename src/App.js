@@ -1,6 +1,7 @@
 import Grid from "./grid"
 import { useEffect, useMemo, useState, useRef } from "react"
 import bombImgSrc from "./bomb.png"
+import { useModal } from "./modalcontext"
 
 const NUM_ROWS = 16
 const NUM_COLS = 16
@@ -105,6 +106,7 @@ function createMap() {
 export default function App() {
   let [revealed, setRevealed] = useState(new Set())
   let map = useMemo(createMap, [])
+  let modal = useModal()
   window.map = map
   let [gameOver, setGameOver] = useState(null)
   let mountedRef = useRef(null)
@@ -165,34 +167,36 @@ export default function App() {
     }
   }
 
-  return (
-    <div className="flex items-center flex-col p-4">
-      <div className="text-2xl font-bold flex mb-10 items-center flex-col ">
-        <h1>Minesweeper</h1>
-        {gameOver && <h1>You Lose!!</h1>}
-      </div>
-      <Grid
-        onCellClick={
-          gameOver
-            ? () => {}
-            : key => {
-                addToRevealed(key)
-                let val = map.get(key)
+  let handleClick = gameOver
+    ? () => {}
+    : key => {
+        addToRevealed(key)
+        let val = map.get(key)
 
-                switch (val) {
-                  case "bomb":
-                    setGameOver({ outcome: Outcomes.LOSE })
-                    return showAllBombs()
+        switch (val) {
+          case "bomb":
+            setGameOver({ outcome: Outcomes.LOSE })
+            return showAllBombs()
 
-                  case null:
-                    return revealEmptyCells(key)
-                }
-              }
+          case null:
+            return revealEmptyCells(key)
         }
-        numCols={NUM_COLS}
-        numRows={NUM_ROWS}
-        renderCell={renderCell}
-      />
-    </div>
+      }
+
+  return (
+    <>
+      <div className="flex items-center flex-col p-4">
+        <div className="text-2xl font-bold flex mb-10 items-center flex-col ">
+          <h1>Minesweeper</h1>
+          {gameOver && <h1>You Lose!!</h1>}
+        </div>
+        <Grid
+          onCellClick={() => modal.handleModal(<div>Hello</div>)}
+          numCols={NUM_COLS}
+          numRows={NUM_ROWS}
+          renderCell={renderCell}
+        />
+      </div>
+    </>
   )
 }
