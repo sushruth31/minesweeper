@@ -35,6 +35,8 @@ function randomKey() {
   return toKey([randRow, randCol])
 }
 
+//hello
+
 function plantBombs() {
   let numBombs = (NUM_COLS * NUM_ROWS) / 5
   let bombs = new Set()
@@ -107,6 +109,7 @@ function createMap() {
 
 export default function App() {
   let [revealed, setRevealed] = useState(new Set())
+  let [flags, setFlags] = useState(new Set())
   let map = useMemo(createMap, [])
   let modal = useModal()
   window.map = map
@@ -131,13 +134,24 @@ export default function App() {
 
   function renderCell({ cellKey }) {
     let val = map.get(cellKey)
+    let revealedClassName =
+      "font-bold text-2xl bg-gray-100 w-full h-full flex items-center justify-center cursor-default"
+    if (typeof val === "number") {
+      revealedClassName += " hover:bg-blue-300"
+    }
+
+    if (flags.has(cellKey)) {
+      return (
+        <div>
+          <FlagIcon style={{ color: "red" }} />
+        </div>
+      )
+    }
+
     return (
       <>
         {revealed.has(cellKey) && (
-          <div
-            className="font-bold text-2xl bg-gray-100 w-full h-full flex items-center justify-center "
-            style={{ color: colorMap[val] }}
-          >
+          <div className={revealedClassName} style={{ color: colorMap[val] }}>
             {val === "bomb" ? <img className="p-1" src={bombImgSrc} /> : val}
           </div>
         )}
@@ -169,21 +183,18 @@ export default function App() {
     }
   }
 
-  let handleClick = key =>
-    gameOver
-      ? () => {}
-      : () => {
-          modal.hide()
-          addToRevealed(key)
-          switch (map.get(key)) {
-            case "bomb":
-              setGameOver({ outcome: Outcomes.LOSE })
-              return showAllBombs()
+  let handleClick = key => {
+    modal.hide()
+    addToRevealed(key)
+    switch (map.get(key)) {
+      case "bomb":
+        setGameOver({ outcome: Outcomes.LOSE })
+        return showAllBombs()
 
-            case null:
-              return revealEmptyCells(key)
-          }
-        }
+      case null:
+        return revealEmptyCells(key)
+    }
+  }
 
   return (
     <>
@@ -194,21 +205,28 @@ export default function App() {
         </div>
         <Grid
           onCellClick={(key, { target: { offsetLeft, offsetTop } }) => {
+            if (revealed.has(key)) {
+              return
+            }
+            if (flags.has(key)) {
+              //remove flag from grid
+              return setFlags(p => new Set([...p].filter(k => k !== key)))
+            }
             modal.handleModal(
               <div
                 style={{ left: offsetLeft, top: offsetTop }}
-                className="absolute bg-white rounded p-2"
+                className="absolute bg-white rounded"
               >
                 <div className="flex items-center justify-center">
                   <FlagIcon
-                    style={{ width: 40, height: 40 }}
-                    className="cursor-pointer mr-4"
+                    onClick={() => setFlags(p => new Set([...p, key]))}
+                    style={{ width: 60, height: 60 }}
+                    className="cursor-pointer mr-4 p-2 hover:bg-zinc-300"
                   />
                   <HardwareIcon
-                    onClick={handleClick(key)}
-                    className="cursor-pointer"
-                    height={40}
-                    width={40}
+                    onClick={() => handleClick(key)}
+                    className="cursor-pointer p-2 hover:bg-zinc-300"
+                    style={{ width: 60, height: 60 }}
                   />
                 </div>
               </div>
