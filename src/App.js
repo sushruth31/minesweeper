@@ -108,11 +108,15 @@ function createMap() {
 }
 
 export default function App() {
+  let [key, setKey] = useState(0)
+  return <Game key={key} reset={() => setKey(p => p + 1)} />
+}
+
+export function Game({ reset }) {
   let [revealed, setRevealed] = useState(new Set())
   let [flags, setFlags] = useState(new Set())
   let map = useMemo(createMap, [])
   let modal = useModal()
-  window.map = map
   let [gameOver, setGameOver] = useState(null)
   let mountedRef = useRef(null)
   function addToRevealed(key) {
@@ -120,16 +124,15 @@ export default function App() {
   }
 
   useEffect(() => {
+    //will only run on first render
+    if (mountedRef.current) return
     function getRandomEmptyKey() {
       let attempt = randomKey()
       return map.get(attempt) == null ? attempt : getRandomEmptyKey()
     }
-    if (!mountedRef.current) {
-      let key = getRandomEmptyKey()
-
-      revealEmptyCells(key)
-      mountedRef.current = true
-    }
+    let key = getRandomEmptyKey()
+    revealEmptyCells(key)
+    mountedRef.current = true
   })
 
   function renderCell({ cellKey }) {
@@ -148,15 +151,13 @@ export default function App() {
       )
     }
 
-    return (
-      <>
-        {revealed.has(cellKey) && (
-          <div className={revealedClassName} style={{ color: colorMap[val] }}>
-            {val === "bomb" ? <img className="p-1" src={bombImgSrc} /> : val}
-          </div>
-        )}
-      </>
-    )
+    if (revealed.has(cellKey)) {
+      return (
+        <div className={revealedClassName} style={{ color: colorMap[val] }}>
+          {val === "bomb" ? <img className="p-1" src={bombImgSrc} /> : val}
+        </div>
+      )
+    }
   }
 
   function revealEmptyCells(key, visited = new Set()) {
@@ -201,11 +202,21 @@ export default function App() {
       <div className="flex items-center flex-col p-4">
         <div className="text-2xl font-bold flex mb-10 items-center flex-col ">
           <h1>Minesweeper</h1>
-          {gameOver && <h1>You Lose!!</h1>}
+          {gameOver && (
+            <div className="flex items-center">
+              <h1>You Lose!!</h1>
+              <button
+                onClick={reset}
+                className="bg-slate-400 text-white p-2 rounded"
+              >
+                Try again
+              </button>
+            </div>
+          )}
         </div>
         <Grid
           onCellClick={(key, { target: { offsetLeft, offsetTop } }) => {
-            if (revealed.has(key)) {
+            if (revealed.has(key) || gameOver) {
               return
             }
             if (flags.has(key)) {
